@@ -2,7 +2,7 @@ use crate::config::*;
 
 pub struct Ship {
     /// Which lanes the ship is in
-    lane: usize,
+    pub lane: usize,
 
     /// The ship's speed in the y axis
     pub speed: f64,
@@ -79,5 +79,4 @@ impl Ship {
             SP_HEIGHT,
         ]
     }
-
 }

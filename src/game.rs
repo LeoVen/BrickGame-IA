@@ -1,12 +1,10 @@
-use std::f64;
 use crate::config::*;
+use crate::player::{KeyState, Player};
 use crate::ship::*;
-use piston_window::{PistonWindow, WindowSettings, UpdateEvent, Size, clear, rectangle};
+use find_folder::Search;
+use piston_window::*;
 use rand::*;
-use crate::player::{Player, KeyState};
-use piston::input::Button;
-use piston::input::keyboard::Key;
-use piston::input::*;
+use std::f64;
 
 /// Checks if a new ship can be spawned
 pub fn can_spawn(ships: &Vec<Ship>) -> bool {
@@ -34,10 +32,11 @@ pub fn can_spawn(ships: &Vec<Ship>) -> bool {
             }
             false
         }
-        None => return false
+        None => return false,
     }
 }
 
+/// Runs the game
 pub fn run() {
     let mut window: PistonWindow = WindowSettings::new("Brick Game", Size::from(W_RES))
         .resizable(false)
@@ -45,19 +44,21 @@ pub fn run() {
         .build()
         .unwrap();
 
+    let mut path = Search::ParentsThenKids(3, 3).for_folder("assets").unwrap();
+    path.push("FiraCode-Regular.ttf");
+    let mut glyphs = window.load_font(path).unwrap();
+
     let mut ships: Vec<Ship> = vec![];
     let mut rng = rand::thread_rng();
     let mut player = Player::new(N_LANES / 2);
-
-    for i in 0..N_LANES {
-        ships.push(Ship::new(i, SHIP_DEFAULT_SPEED));
-    }
+    let mut speed = SHIP_DEFAULT_SPEED;
+    let mut score: usize = 0;
 
     while let Some(e) = window.next() {
         if can_spawn(&ships) {
             // Pick a lane and rotate
             let lane: usize = rng.gen_range(0, N_LANES);
-            ships.push(Ship::new(lane, SHIP_DEFAULT_SPEED));
+            ships.push(Ship::new(lane, speed));
         }
 
         // update ships progress
@@ -65,17 +66,31 @@ pub fn run() {
             for ship in ships.iter_mut() {
                 ship.forward(u.dt);
             }
+            // increase speed based on dt
+            speed += SHIP_INCREASE_SPEED * u.dt;
         }
 
         // delete ships outside of the screen
+        let prev_len = ships.len();
         ships = ships
             .into_iter()
             .filter(|ship| !ship.is_outside())
             .collect();
 
+        score += prev_len - ships.len();
+
+        // check collision
+        if player.check_collision(&ships) {
+            // game over
+            ships.clear();
+            player.reset(N_LANES / 2);
+            speed = SHIP_DEFAULT_SPEED;
+            score = 0;
+        }
+
         // draw things
         // context, graphics, device
-        window.draw_2d(&e, |c, g, _d| {
+        window.draw_2d(&e, |c, g, d| {
             clear(BG_COLOR, g);
 
             // draw ships
@@ -85,11 +100,33 @@ pub fn run() {
                     rectangle(SHIP_COLOR, *rect, c.transform, g);
                 }
             }
-
             // draw player
             for rect in player.get_parts().iter() {
                 rectangle(PLAYER_COLOR, *rect, c.transform, g);
             }
+            // update score
+            let t1 = c.transform.trans(10.0, 20.0);
+            let t2 = c.transform.trans(10.0, 40.0);
+            Text::new(16)
+                .draw(
+                    &format!("Score {}", score),
+                    &mut glyphs,
+                    &c.draw_state,
+                    t1,
+                    g,
+                )
+                .unwrap();
+            Text::new(16)
+                .draw(
+                    &format!("Speed {:.0}", speed),
+                    &mut glyphs,
+                    &c.draw_state,
+                    t2,
+                    g,
+                )
+                .unwrap();
+
+            glyphs.factory.encoder.flush(d);
         });
 
         // Capture player movement

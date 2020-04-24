@@ -1,4 +1,5 @@
 use crate::config::*;
+use crate::ship::*;
 
 pub struct Player {
     lane: usize,
@@ -34,7 +35,7 @@ pub enum KeyState {
 ///
 /// The grid is 3 by 4
 impl Player {
-
+    /// Creates a new player
     pub fn new(initial_lane: usize) -> Player {
         Player {
             lane: initial_lane,
@@ -48,7 +49,7 @@ impl Player {
             (&KeyState::Pressed, KeyState::NotPressed) => {
                 self.left = KeyState::NotPressed;
                 self.change_lane(-1);
-            },
+            }
             (&KeyState::NotPressed, KeyState::Pressed) => {
                 self.left = KeyState::Pressed;
             }
@@ -61,7 +62,7 @@ impl Player {
             (&KeyState::Pressed, KeyState::NotPressed) => {
                 self.right = KeyState::NotPressed;
                 self.change_lane(1);
-            },
+            }
             (&KeyState::NotPressed, KeyState::Pressed) => {
                 self.right = KeyState::Pressed;
             }
@@ -69,7 +70,8 @@ impl Player {
         }
     }
 
-    pub fn change_lane(&mut self, change: i32) {
+    /// Change the player's lane
+    fn change_lane(&mut self, change: i32) {
         if change < 0 {
             // go left
             if self.lane == 0 {
@@ -82,6 +84,24 @@ impl Player {
             }
             self.lane = self.lane + change as usize;
         }
+    }
+
+    /// Check collision of the player with the incoming ships
+    pub fn check_collision(&self, ships: &Vec<Ship>) -> bool {
+        for ship in ships {
+            if ship.progress + SHIP_HEIGHT >= (W_HEIGHT - SHIP_HEIGHT - 2.0 * MARGIN)
+                && ship.lane == self.lane
+            {
+                return true;
+            }
+        }
+
+        false
+    }
+
+    /// Resets the player's current lane
+    pub fn reset(&mut self, lane: usize) {
+        self.lane = lane;
     }
 
     /// Returns the ship's squares
@@ -98,6 +118,8 @@ impl Player {
         ]
     }
 
+    /// Makes a pixel from the x and y of the ship diagram above
+    /// Note that the player is always situated at the bottom of the screen
     fn make_pixel(&self, x: f64, y: f64) -> [f64; 4] {
         [
             SP_WIDTH * x + SHIP_MARGIN * x + lanes(self.lane) + MARGIN,

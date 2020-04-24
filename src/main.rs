@@ -1,6 +1,6 @@
-extern crate input;
-extern crate piston;
-extern crate piston_window;
+//!
+#![warn(missing_debug_implementations, rust_2018_idioms, missing_docs)]
+
 extern crate static_assertions as sa;
 
 mod agent;

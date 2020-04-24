@@ -16,7 +16,9 @@ pub const LANE_WIDTH: f64 = W_WIDTH / N_LANES as f64;
 pub const USEABLE_LANE: f64 = LANE_WIDTH - 2.0 * MARGIN;
 // Ship
 pub const SHIP_HEIGHT: f64 = LANE_WIDTH * 0.9;
-pub const SHIP_DEFAULT_SPEED: f64 = 200.0;
+pub const SHIP_DEFAULT_SPEED: f64 = 150.0;
+// Ship speed increase. Set to 0 to not increase
+pub const SHIP_INCREASE_SPEED: f64 = 10.0;
 // The margin between the ship's squares
 pub const SHIP_MARGIN: f64 = 2.0;
 // How above the screen should ships start to spawn
@@ -26,8 +28,8 @@ pub const BG_COLOR: [f32; 4] = [0.8; 4];
 pub const SHIP_COLOR: [f32; 4] = [0.0, 0.0, 0.0, 1.0];
 // Game difficulty
 // This sets the minimum distance between ships
-pub const DIFFICULTIES : [f64; 3] = [2.0, 1.5, 1.0]; // easy, medium, hard
-pub const GAME_DIFFICULTY : f64 = DIFFICULTIES[1];
+pub const DIFFICULTIES: [f64; 3] = [2.0, 1.5, 1.0]; // easy, medium, hard
+pub const GAME_DIFFICULTY: f64 = DIFFICULTIES[1];
 // Player
 pub const PLAYER_COLOR: [f32; 4] = [0.1, 0.1, 0.1, 1.0];
 
