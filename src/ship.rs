@@ -16,19 +16,19 @@ pub struct Ship {
 /// Y  X ⟶
 /// ↓
 /// +-----+         +-----+
-/// |  5  |         |  6  |
+/// |  0  |         |  1  |
 /// |     |         |     |
 /// +-----+         +-----+
 ///         +-----+
-///         |  0  |
+///         |  2  |
 ///         |     |
 ///         +-----+
 /// +-----+ +-----+ +-----+
-/// |  1  | |  2  | |  3  |
+/// |  3  | |  4  | |  5  |
 /// |     | |     | |     |
 /// +-----+ +-----+ +-----+
 ///         +-----+
-///         |  4  |
+///         |  6  |
 ///         |     |
 ///         +-----+
 ///
@@ -48,19 +48,6 @@ impl Ship {
         self.progress += self.speed * dt;
     }
 
-    /// Returns a rectangle from a pixel grid
-    /// To make the ship:
-    /// x <- [0, 2]
-    /// y <- [0, 3]
-    pub fn make_pixel(&self, x: f64, y: f64) -> [f64; 4] {
-        [
-            SP_WIDTH * x + SHIP_MARGIN * x + lanes(self.lane) + MARGIN,
-            SP_HEIGHT * y + SHIP_MARGIN * y + self.progress,
-            SP_WIDTH,
-            SP_HEIGHT,
-        ]
-    }
-
     /// Returns the ship's squares
     pub fn get_parts(&self) -> [[f64; 4]; 7] {
         // x, y, w, h
@@ -75,8 +62,22 @@ impl Ship {
         ]
     }
 
-    /// Returns whether or not this ship is outside
+    /// Returns whether or not this ship is outside the screen
     pub fn is_outside(&self) -> bool {
         self.progress > W_HEIGHT
     }
+
+    /// Returns a rectangle from a pixel grid
+    /// To make the ship:
+    /// x <- [0, 2]
+    /// y <- [0, 3]
+    fn make_pixel(&self, x: f64, y: f64) -> [f64; 4] {
+        [
+            SP_WIDTH * x + SHIP_MARGIN * x + lanes(self.lane) + MARGIN,
+            SP_HEIGHT * y + SHIP_MARGIN * y + self.progress,
+            SP_WIDTH,
+            SP_HEIGHT,
+        ]
+    }
+
 }

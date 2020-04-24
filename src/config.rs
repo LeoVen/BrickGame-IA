@@ -28,6 +28,8 @@ pub const SHIP_COLOR: [f32; 4] = [0.0, 0.0, 0.0, 1.0];
 // This sets the minimum distance between ships
 pub const DIFFICULTIES : [f64; 3] = [2.0, 1.5, 1.0]; // easy, medium, hard
 pub const GAME_DIFFICULTY : f64 = DIFFICULTIES[1];
+// Player
+pub const PLAYER_COLOR: [f32; 4] = [0.1, 0.1, 0.1, 1.0];
 
 // Non-configurable
 // Ship Pixel width and height
