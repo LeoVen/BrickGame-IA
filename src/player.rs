@@ -2,14 +2,22 @@ use crate::config::*;
 use crate::ship::*;
 
 pub struct Player {
-    lane: usize,
+    pub lane: usize,
     left: KeyState,
     right: KeyState,
 }
 
+/// Used to track the state of keys and toggle the player's ship movement
 pub enum KeyState {
     Pressed,
     NotPressed,
+}
+
+/// The three possible player movements
+pub enum PlayerMovement {
+    MoveLeft,
+    MoveRight,
+    NoMove,
 }
 
 /// A Player is the opposite of a ship
@@ -48,7 +56,7 @@ impl Player {
         match (&self.left, state) {
             (&KeyState::Pressed, KeyState::NotPressed) => {
                 self.left = KeyState::NotPressed;
-                self.change_lane(-1);
+                self.change_lane(PlayerMovement::MoveLeft);
             }
             (&KeyState::NotPressed, KeyState::Pressed) => {
                 self.left = KeyState::Pressed;
@@ -61,7 +69,7 @@ impl Player {
         match (&self.right, state) {
             (&KeyState::Pressed, KeyState::NotPressed) => {
                 self.right = KeyState::NotPressed;
-                self.change_lane(1);
+                self.change_lane(PlayerMovement::MoveRight);
             }
             (&KeyState::NotPressed, KeyState::Pressed) => {
                 self.right = KeyState::Pressed;
@@ -70,19 +78,23 @@ impl Player {
         }
     }
 
-    /// Change the player's lane
-    fn change_lane(&mut self, change: i32) {
-        if change < 0 {
-            // go left
-            if self.lane == 0 {
-                return;
+    /// Change the player's lane given one of the three possible moves:
+    /// MoveLeft, MoveRight, NoMove
+    pub fn change_lane(&mut self, movement: PlayerMovement) {
+        match movement {
+            PlayerMovement::MoveLeft => {
+                if self.lane == 0 {
+                    return;
+                }
+                self.lane = (self.lane as i32 - 1) as usize;
             }
-            self.lane = (self.lane as i32 + change) as usize;
-        } else {
-            if self.lane == N_LANES - 1 {
-                return;
+            PlayerMovement::MoveRight => {
+                if self.lane == N_LANES - 1 {
+                    return;
+                }
+                self.lane += 1;
             }
-            self.lane = self.lane + change as usize;
+            PlayerMovement::NoMove => {}
         }
     }
 

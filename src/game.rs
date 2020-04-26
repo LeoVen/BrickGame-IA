@@ -1,3 +1,4 @@
+use crate::agent::*;
 use crate::config::*;
 use crate::player::{KeyState, Player};
 use crate::ship::*;
@@ -51,8 +52,13 @@ pub fn run() {
     let mut ships: Vec<Ship> = vec![];
     let mut rng = rand::thread_rng();
     let mut player = Player::new(N_LANES / 2);
+    let agent = Agent::new(&mut player);
     let mut speed = SHIP_DEFAULT_SPEED;
     let mut score: usize = 0;
+    let mut record: usize = 0;
+
+    // true - player, false - agent
+    let mut current_player: bool = true;
 
     while let Some(e) = window.next() {
         if can_spawn(&ships) {
@@ -80,12 +86,23 @@ pub fn run() {
         score += prev_len - ships.len();
 
         // check collision
-        if player.check_collision(&ships) {
+        if agent.player.check_collision(&ships) {
             // game over
             ships.clear();
-            player.reset(N_LANES / 2);
+            agent.player.reset(N_LANES / 2);
             speed = SHIP_DEFAULT_SPEED;
+            if score > record {
+                record = score;
+            }
             score = 0;
+        }
+
+        // check for enter key to change the player
+        if let Some(release_args) = e.release_args() {
+            match release_args {
+                Button::Keyboard(Key::Return) => current_player = !current_player,
+                _ => {}
+            }
         }
 
         // draw things
@@ -101,18 +118,32 @@ pub fn run() {
                 }
             }
             // draw player
-            for rect in player.get_parts().iter() {
+            for rect in agent.player.get_parts().iter() {
                 rectangle(PLAYER_COLOR, *rect, c.transform, g);
             }
-            // update score
-            let t1 = c.transform.trans(10.0, 20.0);
-            let t2 = c.transform.trans(10.0, 40.0);
+
+            // update current player
+            let curr_player = if current_player {
+                "Player"
+            } else {
+                "Intelligent Agent"
+            };
             Text::new(16)
                 .draw(
-                    &format!("Score {}", score),
+                    &curr_player,
                     &mut glyphs,
                     &c.draw_state,
-                    t1,
+                    c.transform.trans(10.0, 20.0),
+                    g,
+                )
+                .unwrap();
+            // update score
+            Text::new(16)
+                .draw(
+                    &format!("Score {}[{}]", score, record),
+                    &mut glyphs,
+                    &c.draw_state,
+                    c.transform.trans(10.0, 40.0),
                     g,
                 )
                 .unwrap();
@@ -121,7 +152,7 @@ pub fn run() {
                     &format!("Speed {:.0}", speed),
                     &mut glyphs,
                     &c.draw_state,
-                    t2,
+                    c.transform.trans(10.0, 60.0),
                     g,
                 )
                 .unwrap();
@@ -129,21 +160,34 @@ pub fn run() {
             glyphs.factory.encoder.flush(d);
         });
 
-        // Capture player movement
-        if let Some(press_args) = e.press_args() {
-            match press_args {
-                Button::Keyboard(Key::Left) => player.delta_left(KeyState::Pressed),
-                Button::Keyboard(Key::Right) => player.delta_right(KeyState::Pressed),
-                _ => {}
+        // Capture movement, either from keyboard or the intelligent agent
+        if current_player {
+            // Player is playing
+            if let Some(press_args) = e.press_args() {
+                match press_args {
+                    Button::Keyboard(Key::Left) => {
+                        agent.player.delta_left(KeyState::Pressed);
+                    }
+                    Button::Keyboard(Key::Right) => {
+                        agent.player.delta_right(KeyState::Pressed);
+                    }
+                    _ => {}
+                }
             }
-        }
-
-        if let Some(release_args) = e.release_args() {
-            match release_args {
-                Button::Keyboard(Key::Left) => player.delta_left(KeyState::NotPressed),
-                Button::Keyboard(Key::Right) => player.delta_right(KeyState::NotPressed),
-                _ => (),
+            if let Some(release_args) = e.release_args() {
+                match release_args {
+                    Button::Keyboard(Key::Left) => {
+                        agent.player.delta_left(KeyState::NotPressed);
+                    }
+                    Button::Keyboard(Key::Right) => {
+                        agent.player.delta_right(KeyState::NotPressed);
+                    }
+                    _ => (),
+                }
             }
+        } else {
+            // Agent is playing
+            agent.player.change_lane(agent.next_move(&ships));
         }
     }
 }
